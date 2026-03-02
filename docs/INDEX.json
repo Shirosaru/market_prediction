@@ -1,0 +1,81 @@
+{
+  "timestamp": "2026-03-02T03:58:22.372164",
+  "sources": [
+    {
+      "name": "polymarket",
+      "file_count": 21,
+      "files": [
+        "polymarket/index.html",
+        "polymarket/market-makers_liquidity-rewards.html",
+        "polymarket/changelog.html",
+        "polymarket/market-data_overview.html",
+        "polymarket/trading_matching-engine.html",
+        "polymarket/api-reference_geoblock.html",
+        "polymarket/concepts_markets-events.html",
+        "polymarket/concepts_prices-orderbook.html",
+        "polymarket/concepts_order-lifecycle.html",
+        "polymarket/trading_overview.html",
+        "polymarket/concepts_positions-tokens.html",
+        "polymarket/resources_contract-addresses.html",
+        "polymarket/api-reference_clients-sdks.html",
+        "polymarket/market-makers_getting-started.html",
+        "polymarket/trading_quickstart.html",
+        "polymarket/trading_gasless.html",
+        "polymarket/trading_orderbook.html",
+        "polymarket/market-makers_overview.html",
+        "polymarket/polymarket-101.html",
+        "polymarket/builders_overview.html",
+        "polymarket/quickstart.html"
+      ]
+    },
+    {
+      "name": "kalshi",
+      "file_count": 17,
+      "files": [
+        "kalshi/index.html",
+        "kalshi/sdks_overview.html",
+        "kalshi/getting_started_quick_start_websockets.html",
+        "kalshi/page.html",
+        "kalshi/fix.html",
+        "kalshi/openapi.yaml.html",
+        "kalshi/getting_started_rate_limits.html",
+        "kalshi/getting_started_terms.html",
+        "kalshi/getting_started_api_keys.html",
+        "kalshi/getting_started_quick_start_market_data.html",
+        "kalshi/getting_started_making_your_first_request.html",
+        "kalshi/api-reference_historical_get-historical-cutoff-timestamps.html",
+        "kalshi/getting_started_demo_env.html",
+        "kalshi/asyncapi.yaml.html",
+        "kalshi/api-reference.html",
+        "kalshi/websockets_websocket-connection.html",
+        "kalshi/changelog.html"
+      ]
+    },
+    {
+      "name": "metaculus",
+      "file_count": 0,
+      "files": []
+    },
+    {
+      "name": "fred",
+      "file_count": 2,
+      "files": [
+        "fred/index.html",
+        "fred/docs_api_fred.html"
+      ]
+    },
+    {
+      "name": "alphavantage",
+      "file_count": 2,
+      "files": [
+        "alphavantage/index.html",
+        "alphavantage/documentation.html"
+      ]
+    },
+    {
+      "name": "sec",
+      "file_count": 0,
+      "files": []
+    }
+  ]
+}

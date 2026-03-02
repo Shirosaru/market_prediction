@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Alpha Vantage offers free stock APIs in JSON and CSV formats for realtime and historical stock market data, options, forex, commodity, cryptocurrency feeds and over 50 technical indicators. Global market news API and sentiment scores powered by AI and machine learning. Supports intraday, daily, weekly, and monthly quotes and technical analysis with chart-ready time series." >
+    <meta name="author" content="Alpha Vantage">
+    <meta name="norton-safeweb-site-verification" content="b16u-52ofhfn-ud3-10wotb223qxdrhzq5zoiraq9x45a-u-1um2wpodwxtjyfetcdls779ix48lpu0qjefv48jexcku1za7lrn9wl807qrv160d80wvobrc8tanzhf7" />
+
+    <title>Free Stock APIs in JSON & Excel | Alpha Vantage</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="/static/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+
+    <!-- Theme CSS -->
+    <link href="/static/css/grayscale.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@v2.9.0/dist/cookieconsent.css" media="print" onload="this.media='all'">
+
+    <!-- Favicons -->
+    <link rel="icon" href="/static/img/favicon.ico">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FQEDGD32JV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-FQEDGD32JV');
+    </script>
+
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="a_DkhsL8IBuhoPYYWDawG";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
+
+    <style>
+        /* Centering the content */
+        .rotating-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .line-one {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .line-two {
+            font-size: 40px;
+        }
+        #rotating-word {
+            font-weight: bold;
+            color: #42DCA3;
+        }
+    </style>
+
+
+</head>
+
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+
+     <script defer src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@v2.9.0/dist/cookieconsent.js"></script>
+     <script>
+        window.addEventListener('load', function(){
+
+            var cc = initCookieConsent();
+
+            cc.run({
+                current_lang: 'en',
+                autoclear_cookies: true,
+                page_scripts: true,
+
+                languages: {
+                    'en': {
+                        consent_modal: {
+                            title: 'Cookies on this website',
+                            description: 'The Alpha Vantage website uses cookies to improve your user experience. We have updated our policy to reflect changes in the law on cookies and tracking technologies used on websites. If you continue on this website, you will be providing your consent to our use of cookies. <a href="https://www.alphavantage.co/privacy/" target="_blank">View more</button>',
+                            primary_btn: {
+                                text: 'Accept',
+                                role: 'accept_all'
+                            }
+                        },
+                        settings_modal: {
+                            title: 'Cookie preferences',
+                            save_settings_btn: 'Save settings',
+                            accept_all_btn: 'Accept all',
+                            reject_all_btn: 'Reject all',
+                            close_btn_label: 'Close',
+                            cookie_table_headers: [
+                                {col1: 'Name'},
+                                {col2: 'Domain'},
+                                {col3: 'Expiration'},
+                                {col4: 'Description'}
+                            ],
+                            blocks: [
+                            ]
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+                    Menu <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand page-scroll" href="#page-top">
+                    Alpha <span class="light">Vantage</span>
+                </a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a href="#page-top"></a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#about">About</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="https://www.alphavantage.co/documentation/" target="_blank">Documentation</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="https://mcp.alphavantage.co/" target="_blank">✨MCP + AI Agents</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="https://www.alphavantage.co/spreadsheets/" target="_blank">Spreadsheets</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="https://www.alphavantage.co/academy/" target="_blank">Academy</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="https://www.alphavantage.co/support/#support" target="_blank">Support</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Intro Header -->
+    <header class="intro">
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <div class="rotating-container">
+                            <div class="line-one">Stock Market Data API <i>for</i></div>
+                            <div class="line-two"><span id="rotating-word"></span></div>
+                        </div>
+                         <p class="intro-text">
+                            <br><i class="fa fa-play-circle"></i> Realtime & historical stock market data APIs
+                            <br><i class="fa fa-play-circle"></i> Options, forex, crypto & other asset classes
+                            <br><i class="fa fa-play-circle"></i> Over 60 technical & economic indicators
+                            <br><i class="fa fa-play-circle"></i> Market news API & sentiment analysis
+                            <br><i class="fa fa-play-circle"></i> Seamless MCP support for AI agents
+                        </p>
+                        <a href="https://www.alphavantage.co/documentation/" target="_blank" class="btn btn-default btn-lg" style="width:250px;margin:10px;">API Documentation</a>
+                        <a href="https://www.alphavantage.co/support/#api-key" target="_blank" class="btn btn-default btn-lg" style="width:250px;margin:10px;">Get Free API Key</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="container content-section" style="padding-top: 150px;">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h4 class="text-center">We are proud to partner with the following global organizations among others: </h4>
+                <p><img style="max-width: 100%; height: auto;" src="/static/img/selectedpartners.jpg" alt="List of selected partners of Alpha Vantage stock data API, crypto, and forex data feeds"></p>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2" style="margin-top: 35px">
+                <p><img style="display:block;margin-left:auto;margin-right:auto;width:70%;" src="/static/img/nasdaq_banner.jpg" alt="NASDAQ celebrates Alpha Vantage as an exchange-licensed provider of US market data @ NASDAQ Tower, Time Square, New York City"></p>
+                <p class="text-center" style="font-size:100%;">NASDAQ celebrates Alpha Vantage as its officially licensed US market data provider<br>@ The NASDAQ Stock Exchange Tower, Time Square, New York City</p>
+            </div>
+            <br>
+            <div class="col-lg-8 col-lg-offset-2" style="margin-top: 35px">
+                <div class="text-center">
+                  <img id="market-data-icon" style="vertical-align:top;" src="/static/img/financeIcon.png" alt="stock market data header icon">
+                  <h3 id="market-data-header" style="display:inline-block;vertical-align:top;margin-left: 5px;">Stock Market Data APIs</h3>
+                </div>
+                <p>Alpha Vantage provides realtime and historical financial market data through a set of powerful and developer-friendly data APIs and spreadsheets. From traditional asset classes (e.g., stocks, ETFs, mutual funds) to economic indicators, from foreign exchange rates to commodities, from fundamental data to technical indicators, Alpha Vantage is your one-stop-shop for enterprise-grade global market data delivered through cloud-based APIs, MCP servers, spreadsheets, and more. </p>
+                <div class="text-center">
+                <a href="https://www.alphavantage.co/documentation/" target="_blank" class="btn btn-default btn-lg" style="width: 320px">API Documentation + Demos</a>
+                <a href="https://mcp.alphavantage.co/" target="_blank" class="btn btn-default btn-lg" style="width: 320px">✨MCP Server + AI Agents</a>
+                </div>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2" style="margin-top: 50px">
+                <div class="text-center">
+                  <img id="academy-icon" style="vertical-align:top;" src="/static/img/academyIcon.png" alt="stock market data header icon">
+                  <h3 id="academy-header" style="display:inline-block;vertical-align:top;margin-left: 5px;">The Alpha Academy&trade;</h3>
+                </div>
+                <p>Whether you are an investor, quantitative researcher, software developer, student, or educator, the Alpha Academy is your open knowledge base for essential content in quantitative investing, machine learning, software development, blockchain technologies and more, all delivered to you by industry experts. </p>
+                <div class="text-center">
+                <a href="https://www.alphavantage.co/academy/" target="_blank" class="btn btn-default btn-lg" style="width: 320px">Enter the Alpha Academy</a>
+                </div>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2" style="margin-top: 55px">
+                <h3 class="text-center">About Alpha Vantage</h3>
+                <p>Backed by the prestigious Y Combinator and composed of a tight-knit community of AI researchers, software developers, and financial market experts, Alpha Vantage Inc. has partnered with major exchanges and financial institutions around the world to become a leading provider of global stock APIs as well as foreign exchange rates (forex) and cryptocurrency data feeds. Our cloud-native APIs are centered around rigorous research, cutting edge AI/agentic technology, and an unwavering focus on democratizing access to premium-quality financial data.</p>
+                <p>To get started, browse through the <a href="https://www.alphavantage.co/documentation/" target="_blank">API documentation</a> for our diverse set of data & API endpoints and <a href="https://www.alphavantage.co/support/#api-key" target="_blank">claim your free API key</a> to start exploring our full data portfolio!</p>
+                <p>Please refer to the <a href="https://www.alphavantage.co/support/#support" target="_blank">support page </a> or simply <a href="/cdn-cgi/l/email-protection#f784828787988583b7969b879f9681969983969092d99498">email us</a> if you have any questions, feature requests, career, or <a href="https://www.alphavantage.co/media_kit/" target="_blank">partnership</a> inquiries!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p style="font-size:100%;">Copyright &copy; Alpha Vantage Inc. 2017-2026 | Site last updated: March 2026 | Boston, Massachusetts | <a href="https://www.alphavantage.co/terms_of_service/" target="_blank" style="color:white"><u>Terms of Service</u></a> | <a href="https://www.alphavantage.co/privacy/" target="_blank" style="color:white"><u>Privacy Policy</u></a></p>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Theme JavaScript -->
+    <script src="/static/scripts/grayscale.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var words = ["Algorithmic Trading", "Charting", "AI Agents", "LLM & Grounding", "Quantitative Research", "Fintech Applications", "Data Science & Analytics"];
+            var index = 0;
+
+            function rotateWord() {
+                $('#rotating-word').fadeOut(function() {
+                    $(this).text(words[index]).fadeIn();
+                });
+                index = (index + 1) % words.length;
+            }
+
+            // Initial call
+            $('#rotating-word').text(words[index]);
+            index++;
+
+            // Rotate every 2 seconds
+            setInterval(rotateWord, 2500);
+        });
+
+        var textBlock = $('#market-data-header');
+        var textHeight = textBlock.height();
+        var imageBlock = $('#market-data-icon');
+        imageBlock.css({'height': textHeight, 'width': 'auto'});
+
+        var academytextBlock = $('#academy-header');
+        var academytextHeight = academytextBlock.height();
+        var academyimageBlock = $('#academy-icon');
+        academyimageBlock.css({'height': academytextHeight, 'width': 'auto'});
+    </script>
+
+</body>
+
+</html>
