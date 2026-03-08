@@ -1,0 +1,206 @@
+# ═══════════════════════════════════════════════════════════════
+# Cryptocurrency Market Prediction Pipeline — .gitignore
+# ═══════════════════════════════════════════════════════════════
+
+# ────────────────────────────────────────────────────────────────
+# ENVIRONMENT & CREDENTIALS
+# ────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+.secrets
+secrets/
+
+# ────────────────────────────────────────────────────────────────
+# PYTHON & VIRTUAL ENVIRONMENTS
+# ────────────────────────────────────────────────────────────────
+venv/
+env/
+ENV/
+.venv
+.env.venv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ────────────────────────────────────────────────────────────────
+# IDE & EDITOR FILES
+# ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-workspace
+*.sublime-project
+.project
+.pydevproject
+.settings/
+.classpath
+*.iml
+
+# ────────────────────────────────────────────────────────────────
+# GENERATED DATA & OUTPUTS (Large files, regenerated on each run)
+# ────────────────────────────────────────────────────────────────
+data/
+outputs/
+docs/
+!outputs/OUTPUTS_GUIDE.md
+!outputs/reports/ANALYSIS_REPORT.md
+
+# Cache & Pickle Files
+*.pkl
+*.pickle
+*.joblib
+.cache/
+*.cache
+
+# ────────────────────────────────────────────────────────────────
+# LARGE/GENERATED FILES
+# ────────────────────────────────────────────────────────────────
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.csv
+*.json
+*.xlsx
+*.xls
+
+# HTML Documentation Cache (Phase 1 downloads)
+# Only keep the guides, not the large HTML doc files
+docs/polymarket/
+docs/kalshi/
+docs/metaculus/
+docs/fred/
+docs/alphavantage/
+docs/sec/
+docs/INDEX.json
+docs/master_index.json
+!docs/guides/
+!docs/README.md
+
+# ────────────────────────────────────────────────────────────────
+# VIDEO & MEDIA FILES (Large, project-specific recordings)
+# ────────────────────────────────────────────────────────────────
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.flv
+*.webm
+*.m4v
+*.wav
+*.mp3
+*.aac
+*.flac
+videos/
+media/
+recordings/
+.screenflowdata/
+*.obs-scene-collection
+
+# Keep the script, not the recordings
+!HACKATHON_VIDEO_SCRIPT.md
+
+# ────────────────────────────────────────────────────────────────
+# OS FILES
+# ────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+Thumbs.db
+
+# ────────────────────────────────────────────────────────────────
+# TEMPORARY & LOG FILES
+# ────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.~lock.*
+tmp/
+temp/
+
+# ────────────────────────────────────────────────────────────────
+# TESTING & COVERAGE
+# ────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# ────────────────────────────────────────────────────────────────
+# GIT & VERSION CONTROL
+# ────────────────────────────────────────────────────────────────
+.git/
+.gitkeep
+.hg/
+.svn/
+
+# ────────────────────────────────────────────────────────────────
+# NODE (if any JS/npm used in future)
+# ────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# ────────────────────────────────────────────────────────────────
+# JUPYTER NOTEBOOKS
+# ────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ────────────────────────────────────────────────────────────────
+# CUSTOM — Project Specific
+# ────────────────────────────────────────────────────────────────
+# Generated on each run, don't commit
+/run.log
+
+# Keep these essential files
+!.gitignore
+!README.md
+!NAVIGATION.md
+!requirements.txt
+!docs/guides/

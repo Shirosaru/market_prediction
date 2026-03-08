@@ -45,7 +45,16 @@ def text_from_doc(doc: dict) -> str:
 # Load master index
 # ─────────────────────────────────────────────
 master_index_path = docs_root / "master_index.json"
-master_index = load_json(master_index_path)
+if not master_index_path.exists():
+    print(f"[!] Creating default master_index.json...")
+    master_index = {
+        "description": "Master index of API documentation sources",
+        "sources": ["polymarket", "kalshi", "metaculus", "fred", "alphavantage", "sec"],
+        "collected_at": "auto-generated",
+        "status": "auto-indexed"
+    }
+else:
+    master_index = load_json(master_index_path)
 
 print("=" * 70)
 print("CRYPTO API ANALYSIS — ALL SOURCES")
@@ -66,11 +75,20 @@ for source in sources:
     print(f"  SOURCE: {source.upper()}")
     print(f"{'─'*70}")
 
-    if not idx_path.exists():
-        print("  [!] _index.json not found — skipping")
+    if not src_dir.exists():
+        print("  [!] Source directory not found — skipping")
         continue
-
-    src_index = load_json(idx_path)
+    
+    if not idx_path.exists():
+        # Try to auto-index HTML files in the directory
+        html_files = list(src_dir.glob("*.html"))
+        if not html_files:
+            print("  [!] No documentation files found — skipping")
+            continue
+        print(f"  [i] Auto-indexing {len(html_files)} HTML files...")
+        src_index = {"files": [f.name for f in html_files], "auto_indexed": True}
+    else:
+        src_index = load_json(idx_path)
 
     # Collect all doc files for this source
     doc_files = sorted(src_dir.glob("*.json"))

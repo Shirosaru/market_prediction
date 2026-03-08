@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-02T03:58:22.372164",
+  "timestamp": "2026-03-08T03:27:13.725686",
   "sources": [
     {
       "name": "polymarket",
-      "file_count": 21,
+      "file_count": 32,
       "files": [
         "polymarket/index.html",
         "polymarket/market-makers_liquidity-rewards.html",
@@ -25,7 +25,18 @@
         "polymarket/market-makers_overview.html",
         "polymarket/polymarket-101.html",
         "polymarket/builders_overview.html",
-        "polymarket/quickstart.html"
+        "polymarket/quickstart.html",
+        "polymarket/concepts_resolution.html",
+        "polymarket/market-makers_maker-rebates.html",
+        "polymarket/builders_api-keys.html",
+        "polymarket/advanced_neg-risk.html",
+        "polymarket/resources_error-codes.html",
+        "polymarket/trading_fees.html",
+        "polymarket/market-data_subgraph.html",
+        "polymarket/resources_blockchain-data.html",
+        "polymarket/market-data_fetching-markets.html",
+        "polymarket/api-reference_introduction.html",
+        "polymarket/builders_tiers.html"
       ]
     },
     {
@@ -74,6 +85,16 @@
     },
     {
       "name": "sec",
+      "file_count": 0,
+      "files": []
+    },
+    {
+      "name": "guides",
+      "file_count": 0,
+      "files": []
+    },
+    {
+      "name": "narrative_etc",
       "file_count": 0,
       "files": []
     }

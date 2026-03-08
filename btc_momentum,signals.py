@@ -10,6 +10,11 @@ from scipy import stats
 from datetime import timedelta
 from pathlib import Path
 
+# Create outputs directory for charts
+OUTPUTS_DIR = Path("outputs/charts")
+OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+from pathlib import Path
+
 # ── Zerve Design System colors ──────────────────────────────────
 BTC_BG, BTC_FG, BTC_FG2 = "#1D1D20", "#fbfbff", "#909094"
 BTC_BLUE, BTC_ORANGE     = "#A1C9F4", "#FFB482"
@@ -342,6 +347,8 @@ plt.setp(ar.get_xticklabels(), visible=False)
 plt.setp(am.get_xticklabels(), visible=False)
 btc_momentum_chart.align_ylabels([ap, ar, am])
 print("\n  ✅ btc_momentum_chart rendered")
+btc_momentum_chart.savefig(OUTPUTS_DIR / "btc_momentum_chart.png", dpi=150, bbox_inches="tight", facecolor=BTC_BG)
+print(f"  ✅ Saved to {OUTPUTS_DIR / 'btc_momentum_chart.png'}")
 
 # ── 10. EXPORT VARIABLES ─────────────────────────────────────────
 btc_indicators_df  = btc_td

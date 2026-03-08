@@ -1,6 +1,7 @@
 
 import pandas as pd
 import numpy as np
+import pickle
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -9,6 +10,11 @@ import matplotlib.colors as mcolors
 import requests
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
+
+# Create outputs directory for charts
+OUTPUTS_DIR = Path("outputs/charts")
+OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─────────────────────────────────────────────────────────
 # ZERVE DESIGN SYSTEM
@@ -37,6 +43,21 @@ def style_ax(ax, title=None, xlabel=None, ylabel=None):
     if xlabel: ax.set_xlabel(xlabel, color=FG2, fontsize=10)
     if ylabel: ax.set_ylabel(ylabel, color=FG2, fontsize=10)
     ax.grid(axis="y", color="#333337", linewidth=0.5, alpha=0.6)
+
+# ─────────────────────────────────────────────────────────
+# 0. LOAD DATA FROM PHASE 4
+# ─────────────────────────────────────────────────────────
+import pickle
+from pathlib import Path
+
+output_dir = Path("outputs")
+try:
+    with open(output_dir / "unified_market_df.pkl", "rb") as f:
+        unified_market_df = pickle.load(f)
+    print("✓ Loaded unified_market_df from Phase 4")
+except FileNotFoundError:
+    print("⚠ Warning: unified_market_df.pkl not found. Ensure Phase 4 completed successfully.")
+    raise
 
 # ─────────────────────────────────────────────────────────
 # 1. BUILD ALTCOIN UNIVERSE FROM unified_market_df
@@ -355,7 +376,7 @@ fig1.text(0.01, 0.01, "▼ Coral arrows = dominance breakdowns  |  Purple zones 
 
 plt.tight_layout()
 btc_dom_altseason_chart = fig1
-plt.savefig("btc_dom_altseason_chart.png", dpi=150, bbox_inches="tight", facecolor=BG)
+plt.savefig(OUTPUTS_DIR / "btc_dom_altseason_chart.png", dpi=150, bbox_inches="tight", facecolor=BG)
 plt.show()
 print("Chart 1 saved.")
 
@@ -418,7 +439,7 @@ fig2.text(0.5, 0.01, f"★ BTC reference row  |  Data: CoinGecko  |  {datetime.u
 
 plt.tight_layout()
 altcoin_perf_heatmap = fig2
-plt.savefig("altcoin_perf_heatmap.png", dpi=150, bbox_inches="tight", facecolor=BG)
+plt.savefig(OUTPUTS_DIR / "altcoin_perf_heatmap.png", dpi=150, bbox_inches="tight", facecolor=BG)
 plt.show()
 print("Chart 2 saved.")
 
@@ -484,7 +505,7 @@ for sp in ax.spines.values(): sp.set_visible(False)
 
 plt.tight_layout()
 altcoin_correlation_heatmap = fig3
-plt.savefig("altcoin_correlation_heatmap.png", dpi=150, bbox_inches="tight", facecolor=BG)
+plt.savefig(OUTPUTS_DIR / "altcoin_correlation_heatmap.png", dpi=150, bbox_inches="tight", facecolor=BG)
 plt.show()
 print("Chart 3 saved.")
 
@@ -542,6 +563,27 @@ print(f"\n  High cross-timeframe correlation → trends persist across timeframe
 print(f"  Low correlation → short-term noise, not sustained rotation")
 
 # Store outputs for downstream use
+altseason_context = {
+    "altseason_index_30d": altseason_index_30d,
+    "altseason_index_7d": altseason_index_7d,
+    "altseason_index_24h": altseason_index_24h,
+    "btc_dominance_now": btc_dom_now,
+    "altseason_label": season_label_30d,
+}
+
+from pathlib import Path
+output_dir = Path("outputs")
+output_dir.mkdir(exist_ok=True)
+
+with open(output_dir / "altseason_context.pkl", "wb") as f:
+    pickle.dump(altseason_context, f)
+
+import json as _json
+with open(output_dir / "altseason_context.json", "w") as _f:
+    _json.dump(altseason_context, _f, indent=2, default=str)
+
+print(f"\n✅ altcoin_season_analysis complete! Saved context for Phase 7.")
+print(f"   Saved: outputs/altseason_context.pkl + altseason_context.json")
 altseason_summary = {
     "index_30d": altseason_index_30d,
     "index_7d":  altseason_index_7d,

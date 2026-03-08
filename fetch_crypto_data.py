@@ -16,6 +16,9 @@ import requests
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()  # loads .env from project root
 
 # ─────────────────────────────────────────────
 # Setup data/ folder structure
@@ -63,16 +66,21 @@ print("  1. ALPHAVANTAGE")
 print("="*60)
 
 AV_BASE   = "https://www.alphavantage.co/query"
-# AlphaVantage free tier — user must supply their own key.
-# The demo key is officially documented for limited use.
-# Some endpoints work with any key string; we try "demo" and capture the response.
-AV_KEY    = "demo"
+# Load API key from .env (Alpha_Vantage_API_KEY=...) — falls back to "demo" if not set.
+AV_KEY    = os.getenv("Alpha_Vantage_API_KEY", "demo")
+if AV_KEY and AV_KEY != "demo":
+    print(f"  ✓ Alpha Vantage API key loaded from .env ({AV_KEY[:4]}...{AV_KEY[-3:]})")
+else:
+    print("  ⚠ No Alpha_Vantage_API_KEY in .env — using 'demo' key (very limited)")
 AV_MARKET = "USD"
 COINS     = ["BTC", "ETH", "SOL", "XRP", "DOGE"]
 
 av_files = []
 
 # 1a. CURRENCY_EXCHANGE_RATE — try each coin, capture all responses
+# Free tier limit: 5 requests/minute. We make 10 total AV calls (5 coins × 2 endpoints).
+# 13s between calls keeps us safely within the rate limit.
+AV_DELAY = 13
 exchange_rates = []
 exchange_raw   = {}  # store raw API responses
 
@@ -104,7 +112,7 @@ for coin in COINS:
         if isinstance(resp, dict):
             note = resp.get("Note") or resp.get("Information") or str(resp)
         print(f"  ✗ {coin}/USD — API key required: {str(note)[:80]}")
-    time.sleep(0.8)
+    time.sleep(AV_DELAY)
 
 # Save exchange rates if we got any
 if exchange_rates:
@@ -189,7 +197,7 @@ for coin in COINS:
         if isinstance(resp, dict):
             note = resp.get("Note") or resp.get("Information") or ""
         print(f"  ✗ {coin} OHLCV — needs free API key  ({str(note)[:60]})")
-    time.sleep(0.8)
+    time.sleep(AV_DELAY)
 
 print(f"\n  AlphaVantage: {len(av_files)} file(s) saved  (OHLCV data for: {ohlcv_collected or 'none — free key needed'})")
 
@@ -208,7 +216,7 @@ kalshi_all     = []
 # Known Kalshi crypto series tickers (from docs)
 crypto_series = ["KXBTC", "KXETH", "BTC", "ETH", "CRYPTO", "SOL", "XRP"]
 for st in crypto_series:
-    params = {"limit": 200, "series_ticker": st}
+    params = {"limit": 200, "series_ticker": st, "status": "open"}
     resp = safe_get(f"{KALSHI_BASE}/markets", params=params)
     if resp and isinstance(resp, dict) and "markets" in resp:
         mlist = resp["markets"]
@@ -359,7 +367,11 @@ FRED_BASE   = "https://api.stlouisfed.org/fred"
 fred_files_f = []
 
 # 4a. Attempt API calls (will succeed if FRED_API_KEY env var is set)
-FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
+FRED_API_KEY = os.getenv("FRED_API_KEY", "")
+if FRED_API_KEY:
+    print(f"  ✓ FRED API key loaded from .env ({FRED_API_KEY[:4]}...{FRED_API_KEY[-3:]})")
+else:
+    print("  ⚠ No FRED_API_KEY in .env — FRED series downloads will be skipped")
 
 # Known crypto-relevant FRED series IDs
 FRED_CRYPTO_SERIES = {
@@ -489,6 +501,63 @@ if fred_doc_series:
 print(f"\n  FRED: {len(fred_files_f)} file(s) saved  (live data: {fred_obs_collected or 'none — FRED_API_KEY not set'})")
 
 # ─────────────────────────────────────────────
+# 5. COINGECKO COMMUNITY SENTIMENT
+#    /coins/{id}?community_data=true — sentiment_votes_up_percentage per coin
+#    Free, no auth. Rate-limit: ~1 req/sec on public tier.
+# ─────────────────────────────────────────────
+print("\n" + "="*60)
+print("  5. COINGECKO COMMUNITY SENTIMENT")
+print("="*60)
+
+CG_SENT_DIR = DATA_ROOT / "coingecko"
+CG_SENT_DIR.mkdir(exist_ok=True)
+
+# Top altcoins to fetch sentiment for (ids matching CoinGecko coin IDs)
+CG_SENT_COINS = [
+    "bitcoin", "ethereum", "solana", "ripple", "binancecoin",
+    "dogecoin", "cardano", "avalanche-2", "chainlink", "polkadot",
+    "uniswap", "litecoin", "cosmos", "near", "aptos",
+    "optimism", "arbitrum", "sui", "pepe", "shiba-inu",
+    "internet-computer", "hedera-hashgraph", "vechain", "algorand",
+    "the-open-network", "kaspa", "filecoin", "render-token",
+    "bittensor", "hyperliquid"
+]
+
+cg_sent_rows = []
+for cg_id in CG_SENT_COINS:
+    resp_cg = safe_get(
+        f"https://api.coingecko.com/api/v3/coins/{cg_id}",
+        params={"localization": "false", "tickers": "false",
+                "market_data": "false", "community_data": "true",
+                "developer_data": "false"},
+    )
+    if resp_cg and isinstance(resp_cg, dict):
+        up  = resp_cg.get("sentiment_votes_up_percentage")
+        dn  = resp_cg.get("sentiment_votes_down_percentage")
+        sym = resp_cg.get("symbol", "").upper()
+        if up is not None:
+            cg_sent_rows.append({
+                "coin_id":         cg_id,
+                "symbol":          sym,
+                "votes_up_pct":    float(up),
+                "votes_down_pct":  float(dn or 0),
+                "crowd_prob":      round(float(up) / 100, 4),
+            })
+            print(f"  ✓ {sym}: up={up:.1f}%  down={dn:.1f}%")
+        else:
+            print(f"  ‒ {sym}: no community votes data")
+    time.sleep(1.2)  # respect public rate limit
+
+cg_sent_files = []
+if cg_sent_rows:
+    df_cg_sent = pd.DataFrame(cg_sent_rows)
+    path_cg = CG_SENT_DIR / "community_sentiment.csv"
+    df_cg_sent.to_csv(path_cg, index=False)
+    cg_sent_files.append(("community_sentiment.csv", len(df_cg_sent), path_cg.stat().st_size))
+    print(f"\n  → community_sentiment.csv ({len(df_cg_sent)} coins)")
+print(f"  CoinGecko community sentiment: {len(cg_sent_rows)} coins fetched")
+
+# ─────────────────────────────────────────────
 # Final summary
 # ─────────────────────────────────────────────
 print("\n" + "="*60)
@@ -500,6 +569,7 @@ all_fetched = {
     "kalshi":       kalshi_files_k,
     "polymarket":   poly_files_p,
     "fred":         fred_files_f,
+    "coingecko":    cg_sent_files,
 }
 
 crypto_data_summary = {}
@@ -520,7 +590,7 @@ print(f"  Total: {total_files_count} files  |  {total_bytes_count:,} bytes  ({to
 
 # os.listdir verification
 print("\n  os.listdir verification:")
-for sub in ["alphavantage", "kalshi", "polymarket", "fred"]:
+for sub in ["alphavantage", "kalshi", "polymarket", "fred", "coingecko"]:
     flist = sorted(os.listdir(DATA_ROOT / sub))
     print(f"  data/{sub}/  →  {flist}")
 

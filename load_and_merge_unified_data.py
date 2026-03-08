@@ -286,3 +286,40 @@ print(unified_market_df[avail_prev].head(5).to_string(index=False))
 print(f"\n✅ All sources loaded and merged successfully.")
 print(f"   unified_sentiment_df : {unified_sentiment_df.shape}")
 print(f"   unified_market_df    : {unified_market_df.shape}")
+
+# ─────────────────────────────────────────────────────────
+# Save dataframes as pickle for downstream phases
+# ─────────────────────────────────────────────────────────
+import pickle
+
+output_dir = Path("outputs")
+output_dir.mkdir(exist_ok=True)
+
+# Save unified dataframes
+with open(output_dir / "unified_market_df.pkl", "wb") as f:
+    pickle.dump(unified_market_df, f)
+with open(output_dir / "unified_sentiment_df.pkl", "wb") as f:
+    pickle.dump(unified_sentiment_df, f)
+
+# Save global context variables for Phase 7
+global_context = {
+    "btc_dominance": btc_dominance,
+    "eth_dominance": eth_dominance,
+    "total_market_cap_usd": total_market_cap_usd,
+    "total_volume_usd": total_volume_usd,
+    "active_cryptos": active_cryptos,
+    "market_cap_change_24h": market_cap_change_24h,
+}
+with open(output_dir / "global_context.pkl", "wb") as f:
+    pickle.dump(global_context, f)
+
+# ── Also write human-readable versions ──────────────────────────────
+import json as _json
+
+unified_market_df.to_csv(output_dir / "unified_market_df.csv", index=False)
+unified_sentiment_df.to_csv(output_dir / "unified_sentiment_df.csv", index=False)
+
+with open(output_dir / "global_context.json", "w") as _f:
+    _json.dump(global_context, _f, indent=2, default=str)
+
+print(f"   Saved to outputs/: unified_market_df.pkl/.csv, unified_sentiment_df.pkl/.csv, global_context.pkl/.json")

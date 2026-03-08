@@ -110,6 +110,8 @@ paths:
           description: Bad request
         '401':
           description: Unauthorized
+        '404':
+          $ref: '#/components/responses/NotFoundError'
         '500':
           description: Internal server error
 
@@ -143,6 +145,33 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /historical/trades:
+    get:
+      operationId: GetTradesHistorical
+      summary: Get Historical Trades
+      description: ' Endpoint for getting all historical trades for all markets. Trades that were filled before the historical cutoff are available via this endpoint. See [Historical Data](https://kalshi.com/docs/getting_started/historical_data) for details.'
+      tags:
+        - historical
+      parameters:
+        - $ref: '#/components/parameters/TickerQuery'
+        - $ref: '#/components/parameters/MinTsQuery'
+        - $ref: '#/components/parameters/MaxTsQuery'
+        - $ref: '#/components/parameters/MarketLimitQuery'
+        - $ref: '#/components/parameters/CursorQuery'
+      responses:
+        '200':
+          description: Historical trades retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /historical/markets:
     get:
       operationId: GetHistoricalMarkets
@@ -155,7 +184,7 @@ paths:
         - $ref: '#/components/parameters/MarketLimitQuery'
         - $ref: '#/components/parameters/CursorQuery'
         - $ref: '#/components/parameters/TickersQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/MveHistoricalFilterQuery'
       responses:
         '200':
@@ -310,7 +339,9 @@ paths:
     get:
       operationId: GetOrders
       summary: Get Orders
-      description: 'Restricts the response to orders that have a certain status: resting, canceled, or executed.'
+      description: |
+        Restricts the response to orders that have a certain status: resting, canceled, or executed.
+        Orders that have been canceled or fully executed before the historical cutoff are only available via `GET /historical/orders`. Resting orders will always be available through this endpoint. See [Historical Data](https://kalshi.com/docs/getting_started/historical_data) for details.
       tags:
         - orders
       security:
@@ -319,7 +350,7 @@ paths:
           kalshiAccessTimestamp: []
       parameters:
         - $ref: '#/components/parameters/TickerQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/MultipleEventTickerQuery'
         - $ref: '#/components/parameters/MinTsQuery'
         - $ref: '#/components/parameters/MaxTsQuery'
         - $ref: '#/components/parameters/StatusQuery'
@@ -1037,7 +1068,7 @@ paths:
         - $ref: '#/components/parameters/PositionsLimitQuery'
         - $ref: '#/components/parameters/CountFilterQuery'
         - $ref: '#/components/parameters/TickerQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/SubaccountQueryDefaultPrimary'
       responses:
         '200':
@@ -1068,7 +1099,7 @@ paths:
         - $ref: '#/components/parameters/LimitQuery'
         - $ref: '#/components/parameters/CursorQuery'
         - $ref: '#/components/parameters/TickerQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/MinTsQuery'
         - $ref: '#/components/parameters/MaxTsQuery'
         - $ref: '#/components/parameters/SubaccountQuery'
@@ -1113,7 +1144,9 @@ paths:
     get:
       operationId: GetFills
       summary: Get Fills
-      description: ' Endpoint for getting all fills for the member. A fill is when a trade you have is matched.'
+      description: |
+        Endpoint for getting all fills for the member. A fill is when a trade you have is matched.
+        Fills that occurred before the historical cutoff are only available via `GET /historical/fills`. See [Historical Data](https://kalshi.com/docs/getting_started/historical_data) for details.
       tags:
         - portfolio
       security:
@@ -1329,7 +1362,9 @@ paths:
     get:
       operationId: GetMarketCandlesticks
       summary: Get Market Candlesticks
-      description: 'Time period length of each candlestick in minutes. Valid values: 1 (1 minute), 60 (1 hour), 1440 (1 day).'
+      description: |
+        Time period length of each candlestick in minutes. Valid values: 1 (1 minute), 60 (1 hour), 1440 (1 day).
+        Candlesticks for markets that settled before the historical cutoff are only available via `GET /historical/markets/{ticker}/candlesticks`. See [Historical Data](https://kalshi.com/docs/getting_started/historical_data) for details.
       tags:
         - market
       parameters:
@@ -1397,7 +1432,8 @@ paths:
     get:
       operationId: GetTrades
       summary: Get Trades
-      description: ' Endpoint for getting all trades for all markets.  A trade represents a completed transaction between two users on a specific market. Each trade includes the market ticker, price, quantity, and timestamp information.  This endpoint returns a paginated response. Use the ''limit'' parameter to control page size (1-1000, defaults to 100). The response includes a ''cursor'' field - pass this value in the ''cursor'' parameter of your next request to get the next page. An empty cursor indicates no more pages are available.'
+      description: |
+        Endpoint for getting all trades for all markets. A trade represents a completed transaction between two users on a specific market. Each trade includes the market ticker, price, quantity, and timestamp information. This endpoint returns a paginated response. Use the 'limit' parameter to control page size (1-1000, defaults to 100). The response includes a 'cursor' field - pass this value in the 'cursor' parameter of your next request to get the next page. An empty cursor indicates no more pages are available.
       tags:
         - market
       parameters:
@@ -1892,7 +1928,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/CursorQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/TickerQuery'
         - name: min_ts
           in: query
@@ -2267,7 +2303,7 @@ paths:
           kalshiAccessTimestamp: []
       parameters:
         - $ref: '#/components/parameters/CursorQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/MarketTickerQuery'
         - $ref: '#/components/parameters/SubaccountQuery'
         - name: limit
@@ -2395,7 +2431,7 @@ paths:
           kalshiAccessTimestamp: []
       parameters:
         - $ref: '#/components/parameters/CursorQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/MarketTickerQuery'
         - name: limit
           in: query
@@ -2618,7 +2654,7 @@ paths:
     post:
       operationId: CreateMarketInMultivariateEventCollection
       summary: Create Market In Multivariate Event Collection
-      description: ' Endpoint for creating an individual market in a multivariate event collection. This endpoint must be hit at least once before trading or looking up a market.'
+      description: 'Endpoint for creating an individual market in a multivariate event collection. This endpoint must be hit at least once before trading or looking up a market. Users are limited to 5000 creations per week.'
       tags:
         - multivariate
       security:
@@ -2649,6 +2685,8 @@ paths:
           $ref: '#/components/responses/BadRequestError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -2877,12 +2915,14 @@ paths:
         | min_settled_ts, max_settled_ts | `settled`, *empty* | |
         | min_updated_ts | *empty* | Incompatible with all filters besides `mve_filter=exclude` |
 
+        Markets that settled before the historical cutoff are only available via `GET /historical/markets`. See [Historical Data](https://kalshi.com/docs/getting_started/historical_data) for details.
+
       tags:
         - market
       parameters:
         - $ref: '#/components/parameters/MarketLimitQuery'
         - $ref: '#/components/parameters/CursorQuery'
-        - $ref: '#/components/parameters/EventTickerQuery'
+        - $ref: '#/components/parameters/SingleEventTickerQuery'
         - $ref: '#/components/parameters/SeriesTickerQuery'
         - $ref: '#/components/parameters/MinCreatedTsQuery'
         - $ref: '#/components/parameters/MaxCreatedTsQuery'
@@ -3142,10 +3182,18 @@ components:
         type: string
         x-go-type-skip-optional-pointer: true
 
-    EventTickerQuery:
+    SingleEventTickerQuery:
       name: event_ticker
       in: query
-      description: Event ticker of desired positions. Multiple event tickers can be provided as a comma-separated list (maximum 10).
+      description: Event ticker to filter by. Only a single event ticker is supported.
+      schema:
+        type: string
+        x-go-type-skip-optional-pointer: true
+
+    MultipleEventTickerQuery:
+      name: event_ticker
+      in: query
+      description: Event tickers to filter by, as a comma-separated list (maximum 10).
       schema:
         type: string
         x-go-type-skip-optional-pointer: true
@@ -4524,6 +4572,11 @@ components:
           type: string
           nullable: true
           description: Source id of milestone if available.
+        source_ids:
+          type: object
+          additionalProperties:
+            type: string
+          description: Source ids of milestone if available.
         details:
           type: object
           additionalProperties: true
@@ -5001,6 +5054,11 @@ components:
         source_id:
           type: string
           description: External source identifier for the structured target, if available (e.g., third-party data provider ID).
+        source_ids:
+          type: object
+          additionalProperties:
+            type: string
+          description: Source ids of structured target if available.
         last_updated_ts:
           type: string
           format: date-time
