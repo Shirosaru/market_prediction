@@ -35,13 +35,20 @@ print(f"[Polymarket] crypto_markets.csv: {poly_markets_raw.shape}")
 # ─────────────────────────────────────────────
 CG_BASE  = "https://api.coingecko.com/api/v3"
 HEADERS  = {"accept": "application/json"}
-DELAY    = 1.2   # polite rate-limit pause
+DELAY    = 1.5   # polite rate-limit pause
 
-def cg_get(endpoint, params=None):
-    resp = requests.get(f"{CG_BASE}{endpoint}", params=params,
-                        headers=HEADERS, timeout=20)
-    resp.raise_for_status()
-    return resp.json()
+def cg_get(endpoint, params=None, retries=5):
+    for attempt in range(retries):
+        resp = requests.get(f"{CG_BASE}{endpoint}", params=params,
+                            headers=HEADERS, timeout=20)
+        if resp.status_code == 429:
+            wait = 15 * (attempt + 1)
+            print(f"  [CoinGecko] 429 rate-limit — waiting {wait}s (attempt {attempt+1}/{retries})")
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        return resp.json()
+    raise RuntimeError(f"CoinGecko {endpoint} failed after {retries} retries (rate limit)")
 
 # 3a. Top-100 coins by market cap with 7d/30d price change
 coins_page1 = cg_get("/coins/markets", params={

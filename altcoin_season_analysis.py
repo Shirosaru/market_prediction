@@ -9,7 +9,7 @@ import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
 import requests
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # Create outputs directory for charts
@@ -116,7 +116,7 @@ season_label_7d,  season_color_7d  = season_label(altseason_index_7d)
 season_label_24h, season_color_24h = season_label(altseason_index_24h)
 
 print(f"\n{'='*55}")
-print(f"  ALTCOIN SEASON INDEX (snapshot — {datetime.utcnow().strftime('%Y-%m-%d')})")
+print(f"  ALTCOIN SEASON INDEX (snapshot — {datetime.now(timezone.utc).strftime('%Y-%m-%d')})")
 print(f"{'='*55}")
 print(f"  30d index : {altseason_index_30d:>5.1f}%  →  {season_label_30d}")
 print(f"   7d index : {altseason_index_7d:>5.1f}%  →  {season_label_7d}")
@@ -132,10 +132,17 @@ CG_BASE = "https://api.coingecko.com/api/v3"
 HEADERS = {"accept": "application/json"}
 DELAY   = 1.5
 
-def cg_get(ep, params=None):
-    r = requests.get(f"{CG_BASE}{ep}", params=params, headers=HEADERS, timeout=25)
-    r.raise_for_status()
-    return r.json()
+def cg_get(ep, params=None, retries=5):
+    for attempt in range(retries):
+        r = requests.get(f"{CG_BASE}{ep}", params=params, headers=HEADERS, timeout=25)
+        if r.status_code == 429:
+            wait = 20 * (attempt + 1)
+            print(f"  [CoinGecko] 429 rate-limit on {ep} — waiting {wait}s (attempt {attempt+1}/{retries})")
+            time.sleep(wait)
+            continue
+        r.raise_for_status()
+        return r.json()
+    raise RuntimeError(f"CoinGecko {ep} failed after {retries} retries (rate limit)")
 
 print("\n[CG] Fetching BTC price history (90d)...")
 btc_hist = cg_get("/coins/bitcoin/market_chart", params={
@@ -434,7 +441,7 @@ ax.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False, colors=
 
 for sp in ax.spines.values(): sp.set_visible(False)
 
-fig2.text(0.5, 0.01, f"★ BTC reference row  |  Data: CoinGecko  |  {datetime.utcnow().strftime('%Y-%m-%d')}",
+fig2.text(0.5, 0.01, f"★ BTC reference row  |  Data: CoinGecko  |  {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
           ha="center", color=FG2, fontsize=8)
 
 plt.tight_layout()
@@ -499,7 +506,7 @@ cb2.outline.set_edgecolor("#333337")
 ax.set_title("Correlation Heatmap: Altcoin Returns vs BTC (Leaders + Laggers)",
              color=FG, fontsize=13, fontweight="bold", pad=14)
 ax.text(0.0, -0.11,
-        f"Yellow highlights = BTC row/col  |  Blue = positive corr  |  Coral = inverse  |  {datetime.utcnow().strftime('%Y-%m-%d')}",
+        f"Yellow highlights = BTC row/col  |  Blue = positive corr  |  Coral = inverse  |  {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
         transform=ax.transAxes, color=FG2, fontsize=8)
 for sp in ax.spines.values(): sp.set_visible(False)
 

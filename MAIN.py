@@ -150,7 +150,13 @@ def main():
         log_phase(phase_num, phase_name)
         success = execute_script(script, description)
         results[script] = success
-        time.sleep(1)  # Brief pause between scripts
+        # CoinGecko free tier: 30 req/min. Phases 3, 4, 5 all hit CG heavily,
+        # so pause 30s after each to let the rate-limit window reset.
+        if phase_num in (3, 4):
+            print(f"  [rate-limit pause] Waiting 30s for CoinGecko quota to reset...")
+            time.sleep(30)
+        else:
+            time.sleep(2)
     
     # ─────────────────────────────────────────────────────────────────────────
     # FINAL SUMMARY
