@@ -531,15 +531,18 @@ for sym in all_syms:
     
     gap = crowd_p - adj_signal
     
+    _n_kal = crowd_sentiment[sym].get("n_kalshi", 0)
+    _n_pol = crowd_sentiment[sym].get("n_poly",   0)
     gap_records.append({
-        "symbol": sym,
-        "crowd_prob": crowd_p,
+        "symbol":      sym,
+        "crowd_prob":  crowd_p,
         "tech_signal": adj_signal,
-        "gap": gap,
+        "gap":         gap,
+        "source":      "Prediction Market" if (_n_kal > 0 or _n_pol > 0) else "CG Community",
         "kalshi_prob": crowd_sentiment[sym].get("kalshi_prob"),
         "poly_prob":   crowd_sentiment[sym].get("poly_prob"),
-        "n_kalshi":    crowd_sentiment[sym].get("n_kalshi", 0),
-        "n_poly":      crowd_sentiment[sym].get("n_poly", 0),
+        "n_kalshi":    _n_kal,
+        "n_poly":      _n_pol,
         "p30d":        tech_signals[sym]["p30d"],
         "p7d":         tech_signals[sym]["p7d"],
         "p24h":        tech_signals[sym]["p24h"],
@@ -584,148 +587,234 @@ print("=" * 65)
 CHARTS_DIR = Path("outputs/charts")
 CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── Chart 1: Scatter — Crowd Sentiment vs Technical Signal ────────
-crowd_vs_tech_scatter = plt.figure(figsize=(12, 8), facecolor=BG)
-ax1 = crowd_vs_tech_scatter.add_subplot(111)
-ax1.set_facecolor(BG)
-
+# ── Chart 1: Dual-panel Scatter ──────────────────────────────────────
+# Left panel = Prediction Markets (Kalshi/Polymarket — real money, implied prob)
+# Right panel = CG Community Votes (popularity poll, not money-backed)
 if len(gap_df) > 0:
-    _syms_list = gap_df["symbol"].tolist()
-    _crowd   = gap_df["crowd_prob"].values * 100
-    _tech    = gap_df["tech_signal"].values * 100
-    _gaps    = gap_df["gap"].values
+    _pm_df = gap_df[gap_df["source"] == "Prediction Market"].copy()
+    _cg_df = gap_df[gap_df["source"] == "CG Community"].copy()
 
-    # Color by gap: coral = overconfident, green = undervalued
-    _colors = [CORAL if g > 0.05 else (GREEN if g < -0.05 else BLUE) for g in _gaps]
-    _sizes  = 200 + np.abs(_gaps) * 1200
+    crowd_vs_tech_scatter, (_ax_pm, _ax_cg) = plt.subplots(
+        1, 2, figsize=(20, 8), facecolor=BG,
+        gridspec_kw={"width_ratios": [1, 2.5], "wspace": 0.12}
+    )
+    crowd_vs_tech_scatter.patch.set_facecolor(BG)
 
-    scatter = ax1.scatter(_tech, _crowd, s=_sizes, c=_colors, alpha=0.85,
-                           edgecolors=FG2, linewidths=0.8, zorder=5)
+    def _draw_scatter_panel(ax, df, title, subtitle):
+        ax.set_facecolor(BG)
+        _diag = np.linspace(0, 100, 100)
+        ax.plot(_diag, _diag, color=FG2, lw=1.4, linestyle="--", alpha=0.55, zorder=3)
+        ax.fill_between(_diag, _diag, 100, color=CORAL, alpha=0.06)
+        ax.fill_between(_diag, 0,     _diag, color=GREEN,  alpha=0.06)
+        if len(df) > 0:
+            _crowd  = df["crowd_prob"].values * 100
+            _tech   = df["tech_signal"].values * 100
+            _gaps   = df["gap"].values
+            _colors = [CORAL if g > 0.05 else (GREEN if g < -0.05 else BLUE) for g in _gaps]
+            _sizes  = 200 + np.abs(_gaps) * 1200
+            ax.scatter(_tech, _crowd, s=_sizes, c=_colors, alpha=0.88,
+                       edgecolors=FG2, linewidths=0.8, zorder=5)
+            for i, sym in enumerate(df["symbol"].tolist()):
+                y_off = 3.5 if _crowd[i] > _tech[i] else -5.0
+                ax.annotate(sym, (_tech[i], _crowd[i]),
+                            xytext=(_tech[i], _crowd[i] + y_off),
+                            fontsize=9.5, fontweight="bold", color=FG, ha="center")
+        else:
+            ax.text(50, 50, "No data", ha="center", va="center", color=FG2, fontsize=13)
+        ax.set_xlim(0, 100); ax.set_ylim(0, 100)
+        ax.set_xlabel("Technical Signal (%)", fontsize=10, color=FG)
+        ax.set_ylabel("Crowd Sentiment / Implied Prob (%)", fontsize=10, color=FG)
+        ax.set_title(title + "\n" + subtitle, fontsize=11, fontweight="bold", color=FG, pad=9)
+        ax.grid(True, alpha=0.22)
+        for sp in ax.spines.values():
+            sp.set_edgecolor(FG2)
+        ax.tick_params(colors=FG2)
 
-    # Diagonal line = perfect alignment
-    diag_x = np.linspace(0, 100, 100)
-    ax1.plot(diag_x, diag_x, color=FG2, lw=1.5, linestyle="--", alpha=0.6, label="Perfect Alignment", zorder=3)
+    _draw_scatter_panel(
+        _ax_pm, _pm_df,
+        "Prediction Markets  (BTC · ETH)",
+        "Kalshi + Polymarket — real-money implied probability"
+    )
+    _draw_scatter_panel(
+        _ax_cg, _cg_df,
+        "Community Votes  (Altcoins)",
+        "CoinGecko sentiment_votes_up_pct — popularity poll, NOT money-backed"
+    )
 
-    # Shade: above diagonal = overconfident (crowd > data), below = undervalued
-    ax1.fill_between(diag_x, diag_x, 100, color=CORAL, alpha=0.06, label="Crowd Overconfident Zone")
-    ax1.fill_between(diag_x, 0, diag_x, color=GREEN,  alpha=0.06, label="Data More Bullish Zone")
-
-    # Labels for each point
-    for i, sym in enumerate(_syms_list):
-        y_off = 2.5 if _crowd[i] > _tech[i] else -4.5
-        ax1.annotate(sym, (_tech[i], _crowd[i]),
-                     xytext=(_tech[i], _crowd[i] + y_off),
-                     fontsize=10, fontweight="bold", color=FG, ha="center",
-                     arrowprops=None)
-
-ax1.set_xlabel("Technical Signal Strength (%)", fontsize=12, color=FG)
-ax1.set_ylabel("Crowd Sentiment Score (implied probability %)", fontsize=12, color=FG)
-ax1.set_title("Crowd Sentiment vs Technical Signal — Where Is The Crowd Wrong?",
-              fontsize=14, fontweight="bold", color=FG, pad=12)
-ax1.set_xlim(0, 100)
-ax1.set_ylim(0, 100)
-ax1.grid(True, alpha=0.25)
-
-legend_patches = [
-    mpatches.Patch(color=CORAL, label="Crowd overconfident (gap > 5%)"),
-    mpatches.Patch(color=GREEN,  label="Data more bullish than crowd (gap < -5%)"),
-    mpatches.Patch(color=BLUE,   label="Roughly aligned (|gap| ≤ 5%)"),
-]
-ax1.legend(handles=legend_patches + [
-    plt.Line2D([0], [0], color=FG2, linestyle="--", lw=1.5, label="Perfect Alignment")],
-    framealpha=0.3, facecolor=BG, edgecolor=FG2, labelcolor=FG, fontsize=9,
-    loc="lower right")
-
-plt.tight_layout(pad=1.5)
+    _legend_patches = [
+        mpatches.Patch(color=CORAL, label="Crowd overconfident (gap > 5%)"),
+        mpatches.Patch(color=GREEN,  label="Data more bullish than crowd (gap < −5%)"),
+        mpatches.Patch(color=BLUE,   label="Roughly aligned"),
+        plt.Line2D([0], [0], color=FG2, linestyle="--", lw=1.4, label="Perfect alignment"),
+    ]
+    crowd_vs_tech_scatter.legend(
+        handles=_legend_patches, loc="lower center", ncol=4,
+        framealpha=0.28, facecolor=BG, edgecolor=FG2, labelcolor=FG,
+        fontsize=9, bbox_to_anchor=(0.5, -0.02)
+    )
+    crowd_vs_tech_scatter.suptitle(
+        "Crowd Sentiment vs Technical Signal  |  Prediction Markets vs Community Votes  (Separated)",
+        fontsize=13, fontweight="bold", color=FG, y=1.02
+    )
+    plt.tight_layout(pad=1.5)
+else:
+    crowd_vs_tech_scatter = plt.figure(figsize=(18, 8), facecolor=BG)
 crowd_vs_tech_scatter.savefig(CHARTS_DIR / "sentiment_vs_tech_scatter.png", dpi=150, bbox_inches="tight", facecolor=BG)
 print("  ✅ crowd_vs_tech_scatter rendered → outputs/charts/sentiment_vs_tech_scatter.png")
 
-# ── Chart 2: Bar — Sentiment-Reality Gap by Market ────────────────
+# ── Chart 2: Dual-panel Bar ───────────────────────────────────────
+# Left = Prediction Markets (BTC/ETH) | Right = CG Community (altcoins)
 if len(gap_df) > 0:
-    gap_bar_chart = plt.figure(figsize=(12, 7), facecolor=BG)
-    ax2 = gap_bar_chart.add_subplot(111)
-    ax2.set_facecolor(BG)
+    _pm_bar = gap_df[gap_df["source"] == "Prediction Market"].sort_values("gap_pct", ascending=True)
+    _cg_bar = gap_df[gap_df["source"] == "CG Community"].sort_values("gap_pct",  ascending=True)
 
-    _sorted_gaps = gap_df.sort_values("gap_pct", ascending=True)
-    _bar_colors  = [CORAL if g > 0 else GREEN for g in _sorted_gaps["gap_pct"].values]
+    _n_cg = max(len(_cg_bar), 1)
+    gap_bar_chart, (_bax_pm, _bax_cg) = plt.subplots(
+        1, 2, figsize=(20, max(7, _n_cg * 0.42 + 2.0)), facecolor=BG,
+        gridspec_kw={"width_ratios": [1, 2.8], "wspace": 0.14}
+    )
+    gap_bar_chart.patch.set_facecolor(BG)
 
-    bars = ax2.barh(_sorted_gaps["symbol"], _sorted_gaps["gap_pct"],
-                    color=_bar_colors, alpha=0.88, edgecolor=FG2, linewidth=0.6)
+    def _draw_bar_panel(ax, df, title, subtitle):
+        ax.set_facecolor(BG)
+        if len(df) > 0:
+            _cols = [CORAL if g > 0 else GREEN for g in df["gap_pct"].values]
+            _bars = ax.barh(df["symbol"], df["gap_pct"],
+                            color=_cols, alpha=0.88, edgecolor=FG2, linewidth=0.6)
+            for _b, _gv in zip(_bars, df["gap_pct"].values):
+                _xp = _gv + (0.8 if _gv >= 0 else -0.8)
+                ax.text(_xp, _b.get_y() + _b.get_height() / 2,
+                        f"{_gv:+.1f}%", ha="left" if _gv >= 0 else "right",
+                        va="center", color=FG, fontsize=9.5, fontweight="bold")
+        else:
+            ax.text(0, 0.5, "No data", transform=ax.transAxes,
+                    ha="center", va="center", color=FG2, fontsize=13)
+        ax.axvline(0, color=FG2, lw=1.4, alpha=0.8)
+        ax.set_xlabel("Sentiment–Reality Gap (%)\n+ = crowd more bullish than technicals", color=FG, fontsize=10)
+        ax.set_title(title + "\n" + subtitle, fontsize=11, fontweight="bold", color=FG, pad=9)
+        ax.grid(True, axis="x", alpha=0.22)
+        for sp in ax.spines.values():
+            sp.set_edgecolor(FG2)
+        ax.tick_params(colors=FG2)
 
-    for bar_obj, gap_val in zip(bars, _sorted_gaps["gap_pct"].values):
-        x_pos = gap_val + (0.5 if gap_val >= 0 else -0.5)
-        ha = "left" if gap_val >= 0 else "right"
-        ax2.text(x_pos, bar_obj.get_y() + bar_obj.get_height() / 2,
-                 f"{gap_val:+.1f}%", ha=ha, va="center", color=FG, fontsize=10, fontweight="bold")
+    _draw_bar_panel(
+        _bax_pm, _pm_bar,
+        "Prediction Markets  (BTC · ETH)",
+        "Kalshi + Polymarket — real-money implied probability"
+    )
+    _draw_bar_panel(
+        _bax_cg, _cg_bar,
+        "Community Votes  (Altcoins)",
+        "CoinGecko sentiment_votes_up_pct — popularity poll"
+    )
 
-    ax2.axvline(0, color=FG2, lw=1.5, alpha=0.8)
-    ax2.set_xlabel("Sentiment–Reality Gap (%)\n(positive = crowd more bullish than data)", color=FG, fontsize=11)
-    ax2.set_title("Sentiment–Reality Gap by Market\nKalshi + Polymarket vs Technical Momentum Signals",
-                  fontsize=13, fontweight="bold", color=FG, pad=10)
-    ax2.grid(True, axis="x", alpha=0.25)
-
-    over_p = mpatches.Patch(color=CORAL, label="Crowd overconfident (sell signal)")
-    under_p = mpatches.Patch(color=GREEN, label="Crowd underestimates (buy signal)")
-    ax2.legend(handles=[over_p, under_p], framealpha=0.3, facecolor=BG,
-               edgecolor=FG2, labelcolor=FG, fontsize=10, loc="lower right")
+    _bar_legend = [
+        mpatches.Patch(color=CORAL, label="Crowd overconfident (sell signal)"),
+        mpatches.Patch(color=GREEN,  label="Crowd underestimates (buy signal)"),
+    ]
+    gap_bar_chart.legend(
+        handles=_bar_legend, loc="lower center", ncol=2,
+        framealpha=0.28, facecolor=BG, edgecolor=FG2, labelcolor=FG,
+        fontsize=10, bbox_to_anchor=(0.5, -0.03)
+    )
+    gap_bar_chart.suptitle(
+        "Sentiment–Reality Gap  |  Prediction Markets vs Community Votes  (Separated)",
+        fontsize=13, fontweight="bold", color=FG, y=1.01
+    )
     plt.tight_layout(pad=1.5)
     gap_bar_chart.savefig(CHARTS_DIR / "sentiment_gap_bar.png", dpi=150, bbox_inches="tight", facecolor=BG)
     print("  ✅ gap_bar_chart rendered → outputs/charts/sentiment_gap_bar.png")
 
-# ── Chart 3: Summary Table ─────────────────────────────────────────
+# ── Chart 3: Dual-section Summary Table ──────────────────────────
+# Top section = Prediction Markets | Bottom section = CG Community
 if len(gap_df) > 0:
-    summary_table_fig = plt.figure(figsize=(14, max(4, len(gap_df) * 0.55 + 2.5)), facecolor=BG)
+    _pm_tbl = gap_df[gap_df["source"] == "Prediction Market"].reset_index(drop=True)
+    _cg_tbl = gap_df[gap_df["source"] == "CG Community"].reset_index(drop=True)
+
+    _TABLE_COLS = ["Symbol", "Crowd%", "Tech%", "Gap", "30d", "7d", "#Kal", "#Poly", "Source", "Verdict"]
+
+    def _build_table_rows(df, source_label):
+        rows = []
+        for _, rw in df.iterrows():
+            verdict = ("OVER" if rw["gap"] > 0.10
+                       else ("UNDER" if rw["gap"] < -0.10 else "ALIGNED"))
+            rows.append([
+                rw["symbol"],
+                f"{rw['crowd_prob']*100:.1f}%",
+                f"{rw['tech_signal']*100:.1f}%",
+                f"{rw['gap_pct']:+.1f}%",
+                f"{rw['p30d']:+.1f}%",
+                f"{rw['p7d']:+.1f}%",
+                str(int(rw["n_kalshi"])),
+                str(int(rw["n_poly"])),
+                source_label,
+                verdict,
+            ])
+        return rows
+
+    _pm_rows = _build_table_rows(_pm_tbl, "Pred Mkt")
+    _cg_rows = _build_table_rows(_cg_tbl, "CG Community")
+    _all_rows = _pm_rows + _cg_rows
+
+    _n_rows = len(_all_rows)
+    summary_table_fig = plt.figure(figsize=(16, max(5, _n_rows * 0.48 + 3.5)), facecolor=BG)
     ax3 = summary_table_fig.add_subplot(111)
     ax3.set_facecolor(BG)
     ax3.axis("off")
 
-    table_cols = ["Symbol", "Crowd Prob", "Tech Signal", "Gap", "30d Perf", "7d Perf", "# Kalshi", "# Poly", "Verdict"]
-    table_data = []
-    for _, rw in gap_df.iterrows():
-        verdict = ("🔴 OVERCONFIDENT" if rw["gap"] > 0.10
-                   else ("🟢 UNDERVALUED"  if rw["gap"] < -0.10
-                   else "🟡 ALIGNED"))
-        table_data.append([
-            rw["symbol"],
-            f"{rw['crowd_prob']*100:.1f}%",
-            f"{rw['tech_signal']*100:.1f}%",
-            f"{rw['gap_pct']:+.1f}%",
-            f"{rw['p30d']:+.1f}%",
-            f"{rw['p7d']:+.1f}%",
-            str(int(rw["n_kalshi"])),
-            str(int(rw["n_poly"])),
-            verdict,
-        ])
-
     tbl = ax3.table(
-        cellText=table_data,
-        colLabels=table_cols,
+        cellText=_all_rows,
+        colLabels=_TABLE_COLS,
         cellLoc="center",
         loc="center",
         bbox=[0, 0, 1, 1],
     )
     tbl.auto_set_font_size(False)
-    tbl.set_fontsize(10)
+    tbl.set_fontsize(9)
 
-    # Style cells
+    _n_pm = len(_pm_rows)
     for (r, c), cell in tbl.get_celld().items():
-        cell.set_facecolor("#28282e" if r % 2 == 0 else BG)
         cell.set_edgecolor(FG2)
         cell.set_linewidth(0.5)
         if r == 0:
             cell.set_facecolor("#3a3a42")
-            cell.set_text_props(color=GOLD, fontweight="bold", fontsize=10)
+            cell.set_text_props(color=GOLD, fontweight="bold", fontsize=9.5)
         else:
-            # Color the gap column
-            if c == 3 and r > 0:
-                gap_v = table_data[r-1][3]
-                gap_f = float(gap_v.replace("%", "").replace("+", ""))
-                cell.set_facecolor(CORAL + "30" if gap_f > 10 else (GREEN + "30" if gap_f < -10 else BG))
-            cell.set_text_props(color=FG, fontsize=9)
+            _row_data = _all_rows[r - 1]
+            _is_pm    = (r - 1) < _n_pm
+            # Section background: slightly different shades to visually separate groups
+            _base_bg  = "#252530" if _is_pm else "#202028"
+            _alt_bg   = "#2c2c38" if _is_pm else "#28283a"
+            cell.set_facecolor(_base_bg if r % 2 == 0 else _alt_bg)
+            # Colour the Gap column (index 3)
+            if c == 3:
+                _gf = float(_row_data[3].replace("%", "").replace("+", ""))
+                if _gf > 10:
+                    cell.set_facecolor(CORAL + "44")
+                elif _gf < -10:
+                    cell.set_facecolor(GREEN  + "44")
+            # Colour the Source column (index 8)
+            if c == 8:
+                cell.set_text_props(
+                    color=GOLD if _is_pm else "#88aaff",
+                    fontweight="bold", fontsize=8.5
+                )
+            else:
+                cell.set_text_props(color=FG, fontsize=8.5)
+
+    # Separator annotation between groups
+    if _n_pm > 0 and len(_cg_rows) > 0:
+        _sep_y = 1.0 - (_n_pm + 1) / (_n_rows + 1)
+        ax3.plot([0, 1], [_sep_y, _sep_y], color=FG2, lw=1.2,
+                 linestyle=":", alpha=0.55, transform=ax3.transAxes)
+        ax3.text(0.01, _sep_y + 0.004,
+                 "— CoinGecko Community Votes (poll, not money-backed) —",
+                 transform=ax3.transAxes, color="#88aaff",
+                 fontsize=8, ha="left", va="bottom", style="italic")
 
     summary_table_fig.suptitle(
-        "Sentiment–Reality Gap Summary Table  |  All Available Prediction Markets",
-        fontsize=13, fontweight="bold", color=FG, y=0.98
+        "Sentiment–Reality Gap  |  Prediction Markets (top) vs CG Community Votes (bottom)",
+        fontsize=13, fontweight="bold", color=FG, y=0.99
     )
     plt.tight_layout(pad=2.0)
     summary_table_fig.savefig(CHARTS_DIR / "sentiment_gap_table.png", dpi=150, bbox_inches="tight", facecolor=BG)
@@ -775,16 +864,22 @@ if _all_coin_rows:
     _bars = _ax4.barh(_all_df["symbol"], _all_df["tech_signal"] * 100,
                       color=_bar_colors, alpha=0.88, edgecolor="#333338", linewidth=0.4)
 
-    # Overlay crowd sentiment where available (BTC / ETH)
+    # Overlay crowd sentiment — gold diamond = Prediction Market, blue circle = CG Community
     for _, _row in _all_df.iterrows():
         if _row["crowd_prob"] is not None:
-            _cp = float(_row["crowd_prob"]) * 100
-            _ax4.plot(_cp, _row.name, marker="D", color=GOLD, markersize=7,
+            _cp  = float(_row["crowd_prob"]) * 100
+            _sym = str(_row["symbol"])
+            _is_pm = crowd_sentiment.get(_sym, {}).get("n_kalshi", 0) > 0 \
+                  or crowd_sentiment.get(_sym, {}).get("n_poly",   0) > 0
+            _marker = "D" if _is_pm else "o"
+            _clr    = GOLD  if _is_pm else "#88aaff"
+            _label_suffix = "(PredMkt)" if _is_pm else "(CG poll)"
+            _ax4.plot(_cp, _row.name, marker=_marker, color=_clr, markersize=7 if _is_pm else 6,
                       markeredgecolor=BG, markeredgewidth=0.8, zorder=6)
-            _ax4.annotate(f" Crowd {_cp:.0f}%",
+            _ax4.annotate(f" {_cp:.0f}% {_label_suffix}",
                           xy=(_cp, _row.name),
                           xytext=(_cp + 1.5, _row.name),
-                          color=GOLD, fontsize=7.5, va="center", fontweight="bold")
+                          color=_clr, fontsize=7.0, va="center", fontweight="bold")
 
     # Value labels on bars
     for _b, (_ts, _sym) in zip(_bars, zip(_all_df["tech_signal"].values, _all_df["symbol"].values)):
@@ -801,8 +896,8 @@ if _all_coin_rows:
     _ax4.set_xlabel("Technical Momentum Signal (%)\n0 = strongly bearish  |  50 = neutral  |  100 = strongly bullish",
                     color=FG, fontsize=10)
     _ax4.set_title(
-        f"Altcoin Technical Momentum Heatmap  |  {_n} Coins  |  Sorted Best → Worst\n"
-        f"Gold diamond = prediction market crowd probability (Kalshi/Polymarket)",
+        f"Altcoin Technical Momentum Heatmap  |  {_n} Coins  |  Sorted Best \u2192 Worst\n"
+        f"Gold \u25c6 = Pred Market crowd prob (real money)  |  Blue \u25cf = CG community vote (poll)",
         fontsize=13, fontweight="bold", color=FG, pad=10)
     _ax4.tick_params(axis="y", labelsize=8.5, labelcolor=FG)
     _ax4.tick_params(axis="x", labelcolor=FG2)
@@ -813,7 +908,9 @@ if _all_coin_rows:
         mpatches.Patch(color=_cmap(0.5),  label="Neutral momentum"),
         mpatches.Patch(color=_cmap(0.15), label="Bearish momentum"),
         plt.Line2D([0], [0], marker="D", color=GOLD, markersize=7,
-                   linestyle="None", label="Crowd sentiment (Kalshi/Poly)"),
+                   linestyle="None", label="Crowd: Prediction Market (real money)"),
+        plt.Line2D([0], [0], marker="o", color="#88aaff", markersize=6,
+                   linestyle="None", label="Crowd: CG Community Vote (poll)"),
     ]
     _ax4.legend(handles=_legend_items, framealpha=0.3, facecolor=BG,
                 edgecolor=FG2, labelcolor=FG, fontsize=9, loc="lower right")
